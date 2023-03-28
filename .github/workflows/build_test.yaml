@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    uses: takutakahashi/github-actions/.github/workflows/build.yaml@main
-    secrets: inherit
+    uses: takutakahashi/github-actions/.github/workflows/ghcr.yaml@main
     with:
       image: test:latest
