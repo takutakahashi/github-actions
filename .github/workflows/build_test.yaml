@@ -6,5 +6,6 @@ on:
 jobs:
   build:
     uses: takutakahashi/github-actions/.github/workflows/build.yaml@main
+    secrets: inherit
     with:
       image: test:latest
