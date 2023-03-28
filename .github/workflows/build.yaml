@@ -1,9 +1,5 @@
 name: Build and Push
 
-permissions:
-  id-token: write
-  contents: read
-
 on:
   workflow_call:
     inputs:
