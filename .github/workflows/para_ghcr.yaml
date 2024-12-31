@@ -17,23 +17,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Detect modified directories with Dockerfile
       - name: Detect modified directories
-        id: detect_changes
-        run: |
-          # Find changed directories
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | awk -F'/' '{print $1"/"$2}' | sort -u | uniq)
-          
-          # Check for Dockerfile in each directory
-          DOCKER_CONTEXTS=()
-          for DIR in $CHANGED_DIRS; do
-            if [[ -f "$DIR/Dockerfile" ]]; then
-              DOCKER_CONTEXTS+=("$DIR")
-            fi
-          done
+      id: detect_changes
+      run: |
+        # Fetch the commit history to ensure we compare properly
+        git fetch --depth=2
 
-          # Convert array to JSON string for passing to the next job
-          echo "contexts=$(IFS=,; echo \"${DOCKER_CONTEXTS[*]}\")" >> $GITHUB_OUTPUT
+        # Find the changed directories
+        CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(2023|2024)/' | awk -F'/' '{print $1"/"$2}' | sort -u)
+
+        # Check for Dockerfile in each directory
+        DOCKER_CONTEXTS=()
+        for DIR in $CHANGED_DIRS; do
+          if [[ -f "$DIR/Dockerfile" ]]; then
+            DOCKER_CONTEXTS+=("$DIR")
+          fi
+        done
+
+        # If Dockerfile found, set output
+        if [ ${#DOCKER_CONTEXTS[@]} -gt 0 ]; then
+          echo "contexts=${DOCKER_CONTEXTS[*]}" >> $GITHUB_OUTPUT
+        else
+          echo "contexts=none" >> $GITHUB_OUTPUT
+        fi
+
   build:
     name: Build and Push
     runs-on: ubuntu-latest
