@@ -18,28 +18,28 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Detect modified directories
-      id: detect_changes
-      run: |
-        # Fetch the commit history to ensure we compare properly
-        git fetch --depth=2
+        id: detect_changes
+        run: |
+          # Fetch the commit history to ensure we compare properly
+          git fetch --depth=2
 
-        # Find the changed directories
-        CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(2023|2024)/' | awk -F'/' '{print $1"/"$2}' | sort -u)
+          # Find the changed directories
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(2023|2024)/' | awk -F'/' '{print $1"/"$2}' | sort -u)
 
-        # Check for Dockerfile in each directory
-        DOCKER_CONTEXTS=()
-        for DIR in $CHANGED_DIRS; do
-          if [[ -f "$DIR/Dockerfile" ]]; then
-            DOCKER_CONTEXTS+=("$DIR")
+          # Check for Dockerfile in each directory
+          DOCKER_CONTEXTS=()
+          for DIR in $CHANGED_DIRS; do
+            if [[ -f "$DIR/Dockerfile" ]]; then
+              DOCKER_CONTEXTS+=("$DIR")
+            fi
+          done
+
+          # If Dockerfile found, set output
+          if [ ${#DOCKER_CONTEXTS[@]} -gt 0 ]; then
+            echo "contexts=${DOCKER_CONTEXTS[*]}" >> $GITHUB_OUTPUT
+          else
+            echo "contexts=none" >> $GITHUB_OUTPUT
           fi
-        done
-
-        # If Dockerfile found, set output
-        if [ ${#DOCKER_CONTEXTS[@]} -gt 0 ]; then
-          echo "contexts=${DOCKER_CONTEXTS[*]}" >> $GITHUB_OUTPUT
-        else
-          echo "contexts=none" >> $GITHUB_OUTPUT
-        fi
 
   build:
     name: Build and Push
